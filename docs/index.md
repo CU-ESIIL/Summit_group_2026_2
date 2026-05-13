@@ -1,5 +1,5 @@
 ---
-title: Team Home
+title: ESIIL Community response to wildfire
 public_mode_toggle: true
 ---
 
@@ -87,13 +87,24 @@ public_mode_toggle: true
 
 Our team norms:
 
-- ...
-- ...
-- ...
+- You can always pass 
+- Create a space where everyone feels comfortable contributing
+- there are no dumb questions
+- “Yes and” language
+- Self-organizing around what everyone is interested in
+- Explicit with requests
+- being clear about brainstorming versus action
+- use summaries to refine into action steps
+- lots of potential data sources
+- so work around priorities
+- lead with curiosity and clarification 
+
 
 Our decision making strategy:
 
-...
+-  clarify intensity of opinion 
+-  silent voting for prioritization - everyone has same number of votes 
+
 
 ## Our product(s) 📣 { #product-direction .oasis-report-out-section .oasis-report-out-day2 }
 
