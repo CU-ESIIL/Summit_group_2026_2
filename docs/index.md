@@ -14,6 +14,7 @@ public_mode_toggle: true
 | Lise St. Denis | CU Boulder / CIRES Earth Lab | lise.st.denis@colorado.edu | @lisestdenis |
 | Juan P. Maestre | University of Texas at Austin | juanpedro.maestre@utexas.edu | @drMaestre |
 | Luca A Palasti | CU Boulder | luca.palasti@colorado.edu | @lucap1211 |
+
 ### Project Goal
 Understand how AI-assisted analysis of social media can characterize community and emergency management responses to wildfire events, and whether formal and informal crisis narratives converge or diverge across Twitter.
 Central question: How do official and public perceptions of a fire align, and what does convergence or divergence in Twitter narratives tell us about the information ecosystem during a wildfire?
