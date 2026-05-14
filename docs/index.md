@@ -5,7 +5,7 @@ public_mode_toggle: true
 
 # Using AI to Assess Community Response to Climate Hazards
 
-![Team hero image](assets/hero/hero.png)
+![Team hero image](docs/assets/images/logos/climate_hazards.jpg)
 
 ---
 
