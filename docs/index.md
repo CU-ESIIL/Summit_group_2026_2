@@ -124,7 +124,8 @@ Headline 3 —
 *Visual 1: ...*
 
 ![Main result](assets/figures/Model_Accuracies.png)
-
+![Main result](assets/figures/Confusion_matrix.png)
+![Main result](assets/figures/Per-sentiment_Accuracy.png)
 ### What's Next? 📣 { #whats-next .oasis-report-out-section .oasis-report-out-day3 }
 
 Short term:
