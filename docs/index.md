@@ -43,6 +43,7 @@ Promising prompting directions:
 ---
 ## Day 2
 ### Models Used
+
 | Model | Version | Role |
 |---|---|---|
 | ChatGPT | GPT-4.5 | Thematic and sentiment classification; community and EM corpora |
@@ -61,6 +62,7 @@ General comfort with AI-assisted generation, with explicit boundaries:
 - Comparative sentiment by user group: do community members and emergency managers express the same events in emotionally different ways?
 ### Plan and Subgroups 📣 { #plan .oasis-report-out-section .oasis-report-out-day2 }
 **Overall goal:** Produce a reproducible AI-assisted pipeline that codes themes and sentiment from wildfire Twitter data, validates it against human-coded data, and demonstrates its application across multiple fire events and user groups.
+
 | Subgroup | Members | Aim |
 |---|---|---|
 | Theme prompt engineering | JP, Travis, Lauren, M | Develop and refine LLM prompts for thematic coding; compare lightly vs. highly engineered outputs against human-coded themes |
