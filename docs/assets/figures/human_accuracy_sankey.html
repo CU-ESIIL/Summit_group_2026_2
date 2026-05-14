@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Human Themes as Ground Truth: LLM Accuracy & Sankey Analysis</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<style>
+  :root {
+    --cgpt:   #10a37f;
+    --claude: #a855f7;
+    --human:  #f59e0b;
+    --bg:     #0f172a;
+    --surf:   #1e293b;
+    --bord:   #334155;
+    --text:   #e2e8f0;
+    --muted:  #94a3b8;
+    --accent: #38bdf8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; }
+
+  nav { position: sticky; top: 0; z-index: 100; background: #0a111e; border-bottom: 1px solid var(--bord);
+        display: flex; gap: 4px; padding: 10px 24px; flex-wrap: wrap; }
+  nav a { color: var(--muted); text-decoration: none; padding: 6px 14px; border-radius: 6px;
+          font-size: 13px; transition: all .2s; cursor: pointer; }
+  nav a:hover, nav a.active { background: var(--surf); color: var(--text); }
+
+  header { padding: 44px 24px 28px; max-width: 1200px; margin: 0 auto; }
+  header h1 { font-size: 1.9rem; font-weight: 700;
+    background: linear-gradient(135deg,#f59e0b,#10a37f,#a855f7);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px; }
+  header p { color: var(--muted); font-size: .93rem; max-width: 720px; line-height: 1.65; }
+
+  .stats-bar { display: flex; gap: 14px; flex-wrap: wrap; padding: 0 24px 32px; max-width: 1200px; margin: 0 auto; }
+  .stat { background: var(--surf); border: 1px solid var(--bord); border-radius: 12px;
+          padding: 14px 18px; flex: 1; min-width: 130px; }
+  .stat .lbl  { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 5px; }
+  .stat .val  { font-size: 1.75rem; font-weight: 700; }
+  .stat .sub  { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+  section { max-width: 1200px; margin: 0 auto 56px; padding: 0 24px; }
+  section h2 { font-size: 1.25rem; font-weight: 600; margin-bottom: 5px; color: var(--accent); }
+  section p.desc { color: var(--muted); font-size: .86rem; margin-bottom: 18px; line-height: 1.65; }
+
+  .card { background: var(--surf); border: 1px solid var(--bord); border-radius: 14px;
+          padding: 22px; margin-bottom: 18px; overflow: hidden; }
+  .card h3 { font-size: .95rem; font-weight: 600; margin-bottom: 14px; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media(max-width:800px){.grid-2{grid-template-columns:1fr;}}
+
+  .tabs { display: flex; gap: 4px; margin-bottom: 14px; flex-wrap: wrap; }
+  .tab { padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px;
+         background: transparent; color: var(--muted); border: 1px solid var(--bord); transition: all .2s; }
+  .tab.active { background: var(--accent); color: #0f172a; border-color: transparent; font-weight: 600; }
+
+  .tooltip { position: fixed; background: #1a2744; border: 1px solid var(--bord); border-radius: 8px;
+             padding: 10px 14px; font-size: 11px; pointer-events: none; z-index: 999; max-width: 280px;
+             box-shadow: 0 8px 24px rgba(0,0,0,.5); line-height: 1.55; display: none; }
+
+  .accuracy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 18px; }
+  .acc-card { background: var(--surf); border-radius: 12px; padding: 18px 22px; border: 1px solid var(--bord); }
+  .acc-card .clf-label { font-size: .8rem; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 6px; }
+  .acc-card .big-pct { font-size: 3.2rem; font-weight: 800; }
+  .acc-card .sub-info { font-size: .8rem; color: var(--muted); margin-top: 3px; }
+
+  svg { display: block; }
+  .axis text { font-size: 10px; fill: var(--muted); }
+  .axis path, .axis line { stroke: var(--bord); }
+</style>
+</head>
+<body>
+
+<nav id="navbar">
+  <a href="#section-overview" class="active">Overview</a>
+  <a href="#section-accuracy">Accuracy</a>
+  <a href="#section-sankey">Sankey: Human → AI</a>
+  <a href="#section-pertheme">Per-Theme Accuracy</a>
+  <a href="#section-crosstab">Human × AI Crosstab</a>
+</nav>
+
+<div class="tooltip" id="tip"></div>
+
+<header>
+  <h1>Human Themes as Ground Truth</h1>
+  <p>Seven inductively derived human themes (Fire Progression, Evacuation, Smoke/Air Quality, Operational Coordination, Community Solidarity, Geospatial Mapping, Public Accountability) are used as the reference standard. LLM theme assignments are semantically mapped to these human categories, and accuracy is computed across the 1,279 community (pers) tweets.</p>
+</header>
+
+<div class="stats-bar" id="statsbar"></div>
+
+<!-- ACCURACY OVERVIEW -->
+<section id="section-overview">
+  <h2>Ground Truth: Human Inductive Theme Distribution</h2>
+  <p class="desc">Distribution of the 1,279 community tweets across the seven inductively derived human themes, assigned via keyword-rule coding. Fire Progression dominates (n = 766, 59.9%), reflecting the high volume of status-update tweets. This distribution provides the reference standard for all LLM accuracy calculations below.</p>
+  <div class="card" id="human-dist-chart"></div>
+</section>
+
+<!-- ACCURACY -->
+<section id="section-accuracy">
+  <h2>Overall LLM Accuracy Against Human Themes</h2>
+  <p class="desc">Accuracy is computed by semantically mapping each LLM's assigned theme to its closest human inductive theme using a predefined conceptual correspondence table, then comparing against the keyword-coded human label. Claude (n = 1,279 tweets) outperforms ChatGPT (n = 880 matched tweets) overall.</p>
+  <div class="accuracy-grid" id="acc-cards"></div>
+  <div class="card" id="acc-bar-chart"></div>
+</section>
+
+<!-- SANKEY -->
+<section id="section-sankey">
+  <h2>Sankey Diagrams: Human Themes → AI Theme Assignments</h2>
+  <p class="desc">Each Sankey shows how tweets assigned a given human theme (left) were re-classified by the AI system (right). Flows to the semantically corresponding AI theme indicate correct captures; off-diagonal flows indicate misclassification or thematic splitting.</p>
+  <div class="tabs" id="sankey-tabs">
+    <div class="tab active" data-clf="cgpt">ChatGPT (n = 880)</div>
+    <div class="tab" data-clf="claude">Claude (n = 1,279)</div>
+  </div>
+  <div class="card" id="sankey-container"></div>
+</section>
+
+<!-- PER-THEME ACCURACY -->
+<section id="section-pertheme">
+  <h2>Per-Theme Accuracy: ChatGPT vs Claude</h2>
+  <p class="desc">Accuracy broken down by human theme reveals where each LLM succeeds and fails. Both systems excel on Evacuation and Smoke/Air Quality; ChatGPT scores near zero on Geospatial Mapping and Operational Coordination; Claude scores lowest on Fire Progression and Community Solidarity.</p>
+  <div class="card" id="pertheme-chart"></div>
+</section>
+
+<!-- CROSSTAB -->
+<section id="section-crosstab">
+  <h2>Cross-Tabulation: Human Themes × AI Theme Assignments</h2>
+  <p class="desc">Heatmaps showing how human themes (rows) map to AI themes (columns) based on actual tweet flows. Toggle between classifiers.</p>
+  <div class="tabs" id="ct-tabs">
+    <div class="tab active" data-clf="cgpt">ChatGPT</div>
+    <div class="tab" data-clf="claude">Claude</div>
+  </div>
+  <div class="card" id="crosstab-container"></div>
+</section>
+
+<div style="height:60px"></div>
+
+<script>
+const SD = {
+  "human_themes": [
+    "Fire Progression",
+    "Evacuation",
+    "Smoke / Air Quality",
+    "Operational Coordination",
+    "Community Solidarity",
+    "Geospatial Mapping",
+    "Public Accountability"
+  ],
+  "cgpt_themes": [
+    "Operational status broadcasting",
+    "Seeking visibility and official action",
+    "Living with smoke and threat",
+    "Protective closures and public guidance",
+    "Smoke and weather intelligence",
+    "Evacuation and immediate disruption",
+    "Coordination and movement logistics",
+    "Solidarity, prayer, and gratitude",
+    "Sharing updates and resources",
+    "Institutional support and recognition"
+  ],
+  "claude_themes": [
+    "Tracking Fire Scale and Containment Progress",
+    "Evacuation Orders and Displacement Experiences",
+    "Smoke Exposure and Air Quality Monitoring",
+    "Firefighting Operations and Crew Deployment",
+    "Environmental Observation and Fire Spectacle",
+    "Situational Maps, Photos, and Visual Briefings",
+    "Personal Safety, Proximity, and Local Threat",
+    "Community Solidarity, Prayer, and Emotional Bonds",
+    "Media Amplification and Information Gaps",
+    "Institutional Accountability and Crisis Governance"
+  ],
+  "human_cgpt_flows": {
+    "Fire Progression": {
+      "Sharing updates and resources": 43,
+      "Living with smoke and threat": 55,
+      "Seeking visibility and official action": 403,
+      "Evacuation and immediate disruption": 32,
+      "Solidarity, prayer, and gratitude": 13
+    },
+    "Smoke / Air Quality": {
+      "Living with smoke and threat": 94,
+      "Sharing updates and resources": 1,
+      "Seeking visibility and official action": 12,
+      "Solidarity, prayer, and gratitude": 4
+    },
+    "Evacuation": {
+      "Evacuation and immediate disruption": 63,
+      "Solidarity, prayer, and gratitude": 4,
+      "Seeking visibility and official action": 2,
+      "Living with smoke and threat": 1
+    },
+    "Community Solidarity": {
+      "Seeking visibility and official action": 12,
+      "Solidarity, prayer, and gratitude": 37,
+      "Evacuation and immediate disruption": 5,
+      "Living with smoke and threat": 3,
+      "Sharing updates and resources": 1
+    },
+    "Geospatial Mapping": {
+      "Evacuation and immediate disruption": 1,
+      "Sharing updates and resources": 4,
+      "Seeking visibility and official action": 12
+    },
+    "Operational Coordination": {
+      "Solidarity, prayer, and gratitude": 23,
+      "Seeking visibility and official action": 27,
+      "Living with smoke and threat": 1,
+      "Evacuation and immediate disruption": 1,
+      "Sharing updates and resources": 1
+    },
+    "Public Accountability": {
+      "Seeking visibility and official action": 23,
+      "Living with smoke and threat": 1,
+      "Evacuation and immediate disruption": 1
+    }
+  },
+  "human_claude_flows": {
+    "Fire Progression": {
+      "Tracking Fire Scale and Containment Progress": 276,
+      "Personal Safety, Proximity, and Local Threat": 125,
+      "Media Amplification and Information Gaps": 289,
+      "Environmental Observation and Fire Spectacle": 22,
+      "Evacuation Orders and Displacement Experiences": 7,
+      "Situational Maps, Photos, and Visual Briefings": 8,
+      "Institutional Accountability and Crisis Governance": 4,
+      "Community Solidarity, Prayer, and Emotional Bonds": 11,
+      "Firefighting Operations and Crew Deployment": 17,
+      "Smoke Exposure and Air Quality Monitoring": 7
+    },
+    "Smoke / Air Quality": {
+      "Smoke Exposure and Air Quality Monitoring": 131,
+      "Environmental Observation and Fire Spectacle": 7,
+      "Personal Safety, Proximity, and Local Threat": 5,
+      "Tracking Fire Scale and Containment Progress": 3,
+      "Firefighting Operations and Crew Deployment": 1,
+      "Media Amplification and Information Gaps": 8,
+      "Situational Maps, Photos, and Visual Briefings": 1
+    },
+    "Evacuation": {
+      "Evacuation Orders and Displacement Experiences": 78,
+      "Tracking Fire Scale and Containment Progress": 4,
+      "Situational Maps, Photos, and Visual Briefings": 1,
+      "Personal Safety, Proximity, and Local Threat": 2,
+      "Firefighting Operations and Crew Deployment": 1,
+      "Media Amplification and Information Gaps": 1,
+      "Smoke Exposure and Air Quality Monitoring": 1
+    },
+    "Community Solidarity": {
+      "Community Solidarity, Prayer, and Emotional Bonds": 42,
+      "Personal Safety, Proximity, and Local Threat": 13,
+      "Media Amplification and Information Gaps": 6,
+      "Tracking Fire Scale and Containment Progress": 12,
+      "Institutional Accountability and Crisis Governance": 1,
+      "Evacuation Orders and Displacement Experiences": 2,
+      "Firefighting Operations and Crew Deployment": 2,
+      "Situational Maps, Photos, and Visual Briefings": 1,
+      "Environmental Observation and Fire Spectacle": 1
+    },
+    "Geospatial Mapping": {
+      "Situational Maps, Photos, and Visual Briefings": 24,
+      "Media Amplification and Information Gaps": 4,
+      "Environmental Observation and Fire Spectacle": 2,
+      "Tracking Fire Scale and Containment Progress": 1,
+      "Firefighting Operations and Crew Deployment": 2
+    },
+    "Operational Coordination": {
+      "Firefighting Operations and Crew Deployment": 65,
+      "Personal Safety, Proximity, and Local Threat": 2,
+      "Media Amplification and Information Gaps": 6,
+      "Tracking Fire Scale and Containment Progress": 2
+    },
+    "Public Accountability": {
+      "Media Amplification and Information Gaps": 58,
+      "Tracking Fire Scale and Containment Progress": 2,
+      "Personal Safety, Proximity, and Local Threat": 6,
+      "Institutional Accountability and Crisis Governance": 8,
+      "Environmental Observation and Fire Spectacle": 2,
+      "Evacuation Orders and Displacement Experiences": 2,
+      "Firefighting Operations and Crew Deployment": 3
+    }
+  },
+  "cgpt_to_human": {
+    "Operational status broadcasting": "Fire Progression",
+    "Seeking visibility and official action": "Public Accountability",
+    "Living with smoke and threat": "Smoke / Air Quality",
+    "Protective closures and public guidance": "Evacuation",
+    "Smoke and weather intelligence": "Smoke / Air Quality",
+    "Evacuation and immediate disruption": "Evacuation",
+    "Coordination and movement logistics": "Operational Coordination",
+    "Solidarity, prayer, and gratitude": "Community Solidarity",
+    "Sharing updates and resources": "Fire Progression",
+    "Institutional support and recognition": "Community Solidarity"
+  },
+  "claude_to_human": {
+    "Tracking Fire Scale and Containment Progress": "Fire Progression",
+    "Evacuation Orders and Displacement Experiences": "Evacuation",
+    "Smoke Exposure and Air Quality Monitoring": "Smoke / Air Quality",
+    "Firefighting Operations and Crew Deployment": "Operational Coordination",
+    "Environmental Observation and Fire Spectacle": "Smoke / Air Quality",
+    "Situational Maps, Photos, and Visual Briefings": "Geospatial Mapping",
+    "Personal Safety, Proximity, and Local Threat": "Evacuation",
+    "Community Solidarity, Prayer, and Emotional Bonds": "Community Solidarity",
+    "Media Amplification and Information Gaps": "Public Accountability",
+    "Institutional Accountability and Crisis Governance": "Public Accountability"
+  },
+  "accuracy": {
+    "cgpt": {
+      "n": 880,
+      "correct": 260,
+      "pct": 29.5
+    },
+    "claude": {
+      "n": 1279,
+      "correct": 691,
+      "pct": 54.0
+    }
+  },
+  "per_theme_accuracy": {
+    "cgpt": {
+      "Fire Progression": {
+        "n": 546,
+        "correct": 43,
+        "pct": 7.9
+      },
+      "Evacuation": {
+        "n": 70,
+        "correct": 63,
+        "pct": 90.0
+      },
+      "Smoke / Air Quality": {
+        "n": 111,
+        "correct": 94,
+        "pct": 84.7
+      },
+      "Operational Coordination": {
+        "n": 53,
+        "correct": 0,
+        "pct": 0.0
+      },
+      "Community Solidarity": {
+        "n": 58,
+        "correct": 37,
+        "pct": 63.8
+      },
+      "Geospatial Mapping": {
+        "n": 17,
+        "correct": 0,
+        "pct": 0.0
+      },
+      "Public Accountability": {
+        "n": 25,
+        "correct": 23,
+        "pct": 92.0
+      }
+    },
+    "claude": {
+      "Fire Progression": {
+        "n": 766,
+        "correct": 276,
+        "pct": 36.0
+      },
+      "Evacuation": {
+        "n": 88,
+        "correct": 80,
+        "pct": 90.9
+      },
+      "Smoke / Air Quality": {
+        "n": 156,
+        "correct": 138,
+        "pct": 88.5
+      },
+      "Operational Coordination": {
+        "n": 75,
+        "correct": 65,
+        "pct": 86.7
+      },
+      "Community Solidarity": {
+        "n": 80,
+        "correct": 42,
+        "pct": 52.5
+      },
+      "Geospatial Mapping": {
+        "n": 33,
+        "correct": 24,
+        "pct": 72.7
+      },
+      "Public Accountability": {
+        "n": 81,
+        "correct": 66,
+        "pct": 81.5
+      }
+    }
+  },
+  "human_theme_dist": {
+    "Fire Progression": 766,
+    "Smoke / Air Quality": 156,
+    "Evacuation": 88,
+    "Community Solidarity": 80,
+    "Geospatial Mapping": 33,
+    "Operational Coordination": 75,
+    "Public Accountability": 81
+  },
+  "total_pers": 1279
+};
+
+const CGPT_C   = '#10a37f';
+const CLAUDE_C = '#a855f7';
+const HUMAN_C  = '#f59e0b';
+const EM_C     = '#ef4444';
+const COMM_C   = '#3b82f6';
+const CORRECT_C = '#22c55e';
+const WRONG_C   = '#ef4444';
+
+const tip = document.getElementById('tip');
+const showTip = (html, e) => { tip.innerHTML = html; tip.style.display = 'block'; moveTip(e); };
+const moveTip = e => { tip.style.left=(e.clientX+14)+'px'; tip.style.top=(e.clientY-10)+'px'; };
+const hideTip = () => tip.style.display = 'none';
+
+// ── Stats bar ─────────────────────────────────────────────────────────────────
+const statsData = [
+  {lbl:'Pers Tweets',   val: SD.total_pers.toLocaleString(), sub:'Community corpus', col: HUMAN_C},
+  {lbl:'ChatGPT Matched', val: SD.accuracy.cgpt.n.toLocaleString(), sub:'Matched to human themes', col: CGPT_C},
+  {lbl:'Claude Matched',  val: SD.accuracy.claude.n.toLocaleString(), sub:'Matched to human themes', col: CLAUDE_C},
+  {lbl:'Human Themes',  val: SD.human_themes.length, sub:'Inductive categories', col: HUMAN_C},
+  {lbl:'ChatGPT Accuracy', val: SD.accuracy.cgpt.pct + '%', sub: SD.accuracy.cgpt.correct + ' correct', col: CGPT_C},
+  {lbl:'Claude Accuracy',  val: SD.accuracy.claude.pct + '%', sub: SD.accuracy.claude.correct + ' correct', col: CLAUDE_C},
+];
+const sb = document.getElementById('statsbar');
+statsData.forEach(s => {
+  sb.innerHTML += `<div class="stat"><div class="lbl">${s.lbl}</div>
+    <div class="val" style="color:${s.col}">${s.val}</div>
+    <div class="sub">${s.sub}</div></div>`;
+});
+
+// ── Nav scroll spy ────────────────────────────────────────────────────────────
+const secs = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('nav a');
+window.addEventListener('scroll', () => {
+  let cur = '';
+  secs.forEach(s => { if (window.scrollY >= s.offsetTop - 120) cur = s.id; });
+  navLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href')==='#'+cur));
+});
+navLinks.forEach(a => a.addEventListener('click', e => {
+  e.preventDefault();
+  document.querySelector(a.getAttribute('href')).scrollIntoView({behavior:'smooth'});
+}));
+
+// ── Human theme distribution ─────────────────────────────────────────────────
+(function() {
+  const el = document.getElementById('human-dist-chart');
+  el.innerHTML = '<h3>Human Theme Frequencies (n = 1,279 community tweets)</h3>';
+  const dist  = SD.human_theme_dist;
+  const data  = Object.entries(dist).sort((a,b) => b[1]-a[1]);
+  const W = el.clientWidth - 44 || 600, barH = 26, gap = 6;
+  const padL = 200, padR = 70, padT = 8, padB = 8;
+  const H = data.length*(barH+gap)+padT+padB;
+  const total = Object.values(dist).reduce((s,v)=>s+v,0);
+  const x = d3.scaleLinear([0, d3.max(data, d=>d[1])], [0, W-padL-padR]);
+  const svg = d3.select(el).append('svg').attr('width',W).attr('height',H);
+  const g = svg.append('g').attr('transform',`translate(${padL},${padT})`);
+  data.forEach(([theme, count], i) => {
+    const y = i*(barH+gap);
+    g.append('rect').attr('x',0).attr('y',y).attr('width',0).attr('height',barH)
+      .attr('rx',4).attr('fill',HUMAN_C).attr('opacity',0.82)
+      .on('mouseover', e=>showTip(`<b>${theme}</b><br>${count} tweets (${(count/total*100).toFixed(1)}%)`,e))
+      .on('mousemove',moveTip).on('mouseout',hideTip)
+      .transition().duration(600).delay(i*50).attr('width',x(count));
+    g.append('text').attr('x',-8).attr('y',y+barH/2+4).attr('text-anchor','end')
+      .attr('fill','#e2e8f0').attr('font-size','11px').text(theme);
+    g.append('text').attr('x',x(count)+5).attr('y',y+barH/2+4)
+      .attr('fill','#94a3b8').attr('font-size','10px').text(`${count} (${(count/total*100).toFixed(0)}%)`);
+  });
+})();
+
+// ── Accuracy cards ────────────────────────────────────────────────────────────
+const accCards = document.getElementById('acc-cards');
+[
+  {clf:'ChatGPT', key:'cgpt',  col: CGPT_C},
+  {clf:'Claude',  key:'claude',col: CLAUDE_C},
+].forEach(({clf,key,col}) => {
+  const a = SD.accuracy[key];
+  accCards.innerHTML += `<div class="acc-card">
+    <div class="clf-label" style="color:${col}">${clf}</div>
+    <div class="big-pct" style="color:${col}">${a.pct}%</div>
+    <div class="sub-info">${a.correct.toLocaleString()} correct out of ${a.n.toLocaleString()} tweets</div>
+    <div class="sub-info" style="margin-top:6px">Semantic mapping to 7 human inductive themes</div>
+  </div>`;
+});
+
+// Accuracy grouped bar (overall + per theme)
+(function() {
+  const el = document.getElementById('acc-bar-chart');
+  el.innerHTML = '<h3>Overall Accuracy Comparison (Semantic Theme Mapping)</h3>';
+  const W = el.clientWidth - 44 || 600, H = 120;
+  const pad = {l:120,r:80,t:20,b:30};
+  const clfs = [{key:'cgpt',col:CGPT_C,lbl:'ChatGPT'},{key:'claude',col:CLAUDE_C,lbl:'Claude'}];
+  const x0 = d3.scaleBand(['ChatGPT','Claude'],[0,W-pad.l-pad.r]).padding(0.5);
+  const y  = d3.scaleLinear([0,100],[H-pad.t-pad.b,0]);
+  const svg = d3.select(el).append('svg').attr('width',W).attr('height',H);
+  const g = svg.append('g').attr('transform',`translate(${pad.l},${pad.t})`);
+  g.append('g').call(d3.axisLeft(y).ticks(5).tickFormat(d=>d+'%')).attr('class','axis');
+  g.append('g').attr('transform',`translate(0,${H-pad.t-pad.b})`).call(d3.axisBottom(x0)).attr('class','axis');
+  clfs.forEach(({key,col,lbl}) => {
+    const pct = SD.accuracy[key].pct;
+    g.append('rect').attr('x',x0(lbl)).attr('y',H-pad.t-pad.b).attr('width',x0.bandwidth()).attr('height',0)
+      .attr('rx',4).attr('fill',col).attr('opacity',0.85)
+      .transition().duration(700).attr('y',y(pct)).attr('height',H-pad.t-pad.b-y(pct));
+    g.append('text').attr('x',x0(lbl)+x0.bandwidth()/2).attr('y',y(pct)-6)
+      .attr('text-anchor','middle').attr('fill',col).attr('font-size','13px').attr('font-weight','700')
+      .text(pct+'%');
+  });
+  // Reference line at 50%
+  g.append('line').attr('x1',0).attr('x2',W-pad.l-pad.r).attr('y1',y(50)).attr('y2',y(50))
+    .attr('stroke','#334155').attr('stroke-dasharray','4,3');
+  g.append('text').attr('x',W-pad.l-pad.r+4).attr('y',y(50)+3).attr('fill','#475569').attr('font-size','9px').text('50%');
+})();
+
+// ── SANKEY ────────────────────────────────────────────────────────────────────
+function renderSankey(clf) {
+  const el = document.getElementById('sankey-container');
+  el.innerHTML = `<h3>Human Themes → ${clf==='cgpt'?'ChatGPT':'Claude'} Theme Assignments</h3>`;
+  const flows    = clf==='cgpt' ? SD.human_cgpt_flows : SD.human_claude_flows;
+  const aiThemes = clf==='cgpt' ? SD.cgpt_themes : SD.claude_themes;
+  const mapping  = clf==='cgpt' ? SD.cgpt_to_human : SD.claude_to_human;
+  const clfColor = clf==='cgpt' ? CGPT_C : CLAUDE_C;
+
+  const W = el.clientWidth - 44 || 860, H = 560;
+  const pad = 18, nodeW = 16, nodeGap = 10;
+
+  // Compute totals
+  const htTotals = SD.human_themes.map(ht => Object.values(flows[ht]||{}).reduce((s,v)=>s+v,0));
+  const aiTotals = aiThemes.map(at => SD.human_themes.reduce((s,ht) => s+(flows[ht]||{})[at]||0, 0));
+
+  function layoutNodes(totals, n, usableH) {
+    const total = d3.sum(totals);
+    const ys = []; let cur = pad;
+    totals.forEach(t => {
+      const h = total > 0 ? Math.max((t/total)*(usableH-(n-1)*nodeGap), 4) : 4;
+      ys.push({y: cur, h});
+      cur += h + nodeGap;
+    });
+    return ys;
+  }
+
+  const usableH = H - 2*pad;
+  const htLayout = layoutNodes(htTotals, SD.human_themes.length, usableH);
+  const aiLayout = layoutNodes(aiTotals, aiThemes.length, usableH);
+
+  const x0 = 180, x1 = W - 240;
+  const svg = d3.select(el).append('svg').attr('width',W).attr('height',H);
+
+  const htOffsets = Array(SD.human_themes.length).fill(0);
+  const aiOffsets = Array(aiThemes.length).fill(0);
+
+  // Draw links
+  SD.human_themes.forEach((ht, hi) => {
+    const htTotal = htTotals[hi];
+    const aiEntries = Object.entries(flows[ht]||{}).sort((a,b)=>b[1]-a[1]);
+    aiEntries.forEach(([at, count]) => {
+      const ai = aiThemes.indexOf(at);
+      if (ai < 0 || count === 0) return;
+      const sy = htLayout[hi], ty = aiLayout[ai];
+      const frac = htTotal > 0 ? count/htTotal : 0;
+      const lh = Math.max(frac * sy.h, 1);
+      const tfrac = aiTotals[ai] > 0 ? count/aiTotals[ai] : 0;
+      const tlh = Math.max(tfrac * ty.h, 1);
+
+      const y0s = sy.y + htOffsets[hi];
+      const y0e = y0s + lh;
+      const y1s = ty.y + aiOffsets[ai];
+      const y1e = y1s + tlh;
+      const mx = (x0 + nodeW + x1) / 2;
+
+      const isCorrect = mapping[at] === ht;
+      const path = `M${x0+nodeW},${y0s} C${mx},${y0s} ${mx},${y1s} ${x1},${y1s}
+                    L${x1},${y1e} C${mx},${y1e} ${mx},${y0e} ${x0+nodeW},${y0e} Z`;
+
+      svg.append('path').attr('d', path)
+        .attr('fill', isCorrect ? CORRECT_C : '#334155')
+        .attr('opacity', isCorrect ? 0.55 : 0.30)
+        .on('mouseover', e => showTip(
+          `<b>Human:</b> ${ht}<br><b>${clf==='cgpt'?'ChatGPT':'Claude'}:</b> ${at}<br>` +
+          `<b>Count:</b> ${count} tweets<br><b>Match:</b> ${isCorrect?'✓ Correct':'✗ Different'}`, e))
+        .on('mousemove', moveTip).on('mouseout', hideTip);
+
+      htOffsets[hi] += lh;
+      aiOffsets[ai] += tlh;
+    });
+  });
+
+  // Human theme nodes (left)
+  SD.human_themes.forEach((ht, i) => {
+    const {y,h} = htLayout[i];
+    if (!h || h<1) return;
+    svg.append('rect').attr('x',x0).attr('y',y).attr('width',nodeW).attr('height',h)
+      .attr('rx',3).attr('fill',HUMAN_C);
+    svg.append('text').attr('x',x0-7).attr('y',y+h/2+4)
+      .attr('text-anchor','end').attr('fill',HUMAN_C).attr('font-size','10px')
+      .text(ht.length>22?ht.slice(0,21)+'…':ht);
+    const pta = SD.per_theme_accuracy[clf][ht];
+    svg.append('text').attr('x',x0-7).attr('y',y+h/2+14)
+      .attr('text-anchor','end').attr('fill',pta&&pta.pct>=70?CORRECT_C:'#ef4444').attr('font-size','9px')
+      .text(pta ? pta.pct+'% acc' : '');
+  });
+
+  // AI theme nodes (right)
+  aiThemes.forEach((at, i) => {
+    const {y,h} = aiLayout[i];
+    if (!h || h<1) return;
+    svg.append('rect').attr('x',x1).attr('y',y).attr('width',nodeW).attr('height',h)
+      .attr('rx',3).attr('fill',clfColor);
+    svg.append('text').attr('x',x1+nodeW+6).attr('y',y+h/2+4)
+      .attr('text-anchor','start').attr('fill',clfColor).attr('font-size','9.5px')
+      .text(at.length>34?at.slice(0,33)+'…':at);
+    const mapsTo = mapping[at];
+    svg.append('text').attr('x',x1+nodeW+6).attr('y',y+h/2+14)
+      .attr('text-anchor','start').attr('fill','#475569').attr('font-size','8.5px')
+      .text(mapsTo ? '≈ '+mapsTo.slice(0,22) : '');
+  });
+
+  // Axis labels
+  svg.append('text').attr('x',x0+nodeW/2).attr('y',12).attr('text-anchor','middle')
+    .attr('fill',HUMAN_C).attr('font-size','11px').attr('font-weight','600').text('Human Themes');
+  svg.append('text').attr('x',x1+nodeW/2).attr('y',12).attr('text-anchor','middle')
+    .attr('fill',clfColor).attr('font-size','11px').attr('font-weight','600')
+    .text(clf==='cgpt'?'ChatGPT':'Claude');
+
+  // Legend
+  const leg = svg.append('g').attr('transform',`translate(${x0+nodeW+12},${H-22})`);
+  [{c:CORRECT_C,l:'Correct classification (semantic match)'},{c:'#334155',l:'Divergent classification'}]
+    .forEach(({c,l},i) => {
+      leg.append('rect').attr('x',i*220).attr('y',-8).attr('width',10).attr('height',10).attr('rx',2).attr('fill',c).attr('opacity',0.7);
+      leg.append('text').attr('x',i*220+14).attr('y',2).attr('fill','#94a3b8').attr('font-size','10px').text(l);
+    });
+}
+
+renderSankey('cgpt');
+document.querySelectorAll('#sankey-tabs .tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('#sankey-tabs .tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    renderSankey(tab.dataset.clf);
+  });
+});
+
+// ── PER-THEME ACCURACY ────────────────────────────────────────────────────────
+(function() {
+  const el = document.getElementById('pertheme-chart');
+  el.innerHTML = '<h3>Per-Theme Accuracy: ChatGPT (teal) vs Claude (purple)</h3>';
+  const themes = SD.human_themes;
+  const W = el.clientWidth - 44 || 700;
+  const barH = 16, gap = 4, groupGap = 18, padL = 210, padR = 60, padT = 10, padB = 30;
+  const H = themes.length*(2*(barH+gap)+groupGap)+padT+padB;
+  const x = d3.scaleLinear([0,100],[0,W-padL-padR]);
+  const svg = d3.select(el).append('svg').attr('width',W).attr('height',H);
+  const g = svg.append('g').attr('transform',`translate(${padL},${padT})`);
+
+  // Grid lines
+  [25,50,75,100].forEach(v => {
+    g.append('line').attr('x1',x(v)).attr('x2',x(v)).attr('y1',0).attr('y2',H-padT-padB)
+      .attr('stroke','#334155').attr('stroke-dasharray','3,3').attr('opacity',0.5);
+    g.append('text').attr('x',x(v)).attr('y',H-padT-padB+14).attr('text-anchor','middle')
+      .attr('fill','#475569').attr('font-size','9px').text(v+'%');
+  });
+
+  themes.forEach((ht,i) => {
+    const yBase = i*(2*(barH+gap)+groupGap);
+    const cgpt   = SD.per_theme_accuracy.cgpt[ht]   || {pct:0,n:0};
+    const claude = SD.per_theme_accuracy.claude[ht]  || {pct:0,n:0};
+
+    // CGPT bar
+    g.append('rect').attr('x',0).attr('y',yBase).attr('width',0).attr('height',barH)
+      .attr('rx',3).attr('fill',CGPT_C).attr('opacity',0.82)
+      .on('mouseover',e=>showTip(`<b>${ht}</b><br>ChatGPT: ${cgpt.pct}% (${cgpt.correct||0}/${cgpt.n})`,e))
+      .on('mousemove',moveTip).on('mouseout',hideTip)
+      .transition().duration(600).attr('width',x(cgpt.pct));
+    g.append('text').attr('x',-6).attr('y',yBase+barH/2+4).attr('text-anchor','end')
+      .attr('fill','#e2e8f0').attr('font-size','10px').text(ht.length>26?ht.slice(0,25)+'…':ht);
+    g.append('text').attr('x',x(cgpt.pct)+4).attr('y',yBase+barH/2+4)
+      .attr('fill',CGPT_C).attr('font-size','9px').text(cgpt.pct+'%');
+
+    // Claude bar
+    const yC = yBase+barH+gap;
+    g.append('rect').attr('x',0).attr('y',yC).attr('width',0).attr('height',barH)
+      .attr('rx',3).attr('fill',CLAUDE_C).attr('opacity',0.82)
+      .on('mouseover',e=>showTip(`<b>${ht}</b><br>Claude: ${claude.pct}% (${claude.correct||0}/${claude.n})`,e))
+      .on('mousemove',moveTip).on('mouseout',hideTip)
+      .transition().duration(600).attr('width',x(claude.pct));
+    g.append('text').attr('x',x(claude.pct)+4).attr('y',yC+barH/2+4)
+      .attr('fill',CLAUDE_C).attr('font-size','9px').text(claude.pct+'%');
+  });
+
+  // Legend
+  const leg = svg.append('g').attr('transform',`translate(${padL},${H-6})`);
+  [{c:CGPT_C,l:'ChatGPT'},{c:CLAUDE_C,l:'Claude'}].forEach(({c,l},i)=>{
+    leg.append('rect').attr('x',i*100).attr('y',-10).attr('width',10).attr('height',10).attr('rx',2).attr('fill',c);
+    leg.append('text').attr('x',i*100+14).attr('y',0).attr('fill','#94a3b8').attr('font-size','10px').text(l);
+  });
+})();
+
+// ── CROSSTAB ──────────────────────────────────────────────────────────────────
+function renderCrosstab(clf) {
+  const el = document.getElementById('crosstab-container');
+  el.innerHTML = `<h3>Human Themes × ${clf==='cgpt'?'ChatGPT':'Claude'} Themes (tweet counts)</h3>`;
+  const flows    = clf==='cgpt' ? SD.human_cgpt_flows  : SD.human_claude_flows;
+  const aiThemes = clf==='cgpt' ? SD.cgpt_themes : SD.claude_themes;
+  const mapping  = clf==='cgpt' ? SD.cgpt_to_human : SD.claude_to_human;
+  const clfColor = clf==='cgpt' ? CGPT_C : CLAUDE_C;
+
+  const cellW = 70, cellH = 30, padL = 220, padT = 110, padR = 20, padB = 20;
+  const W = padL + aiThemes.length * cellW + padR;
+  const H = padT + SD.human_themes.length * cellH + padB;
+
+  const allVals = SD.human_themes.flatMap(ht => aiThemes.map(at => (flows[ht]||{})[at]||0));
+  const maxVal = d3.max(allVals);
+  const colorScale = d3.scaleSequential([0, maxVal], clf==='cgpt'
+    ? d3.interpolate('#1e293b','#10a37f')
+    : d3.interpolate('#1e293b','#a855f7'));
+
+  const svg = d3.select(el).append('svg').attr('width', Math.min(W,1100)).attr('height',H)
+    .style('overflow','visible');
+  const g = svg.append('g').attr('transform',`translate(${padL},${padT})`);
+
+  // Column headers
+  aiThemes.forEach((at, j) => {
+    const isMatch = ht => mapping[at] === ht;
+    g.append('text')
+      .attr('transform',`translate(${j*cellW+cellW/2},-8) rotate(-42)`)
+      .attr('text-anchor','start').attr('fill',clfColor).attr('font-size','9px')
+      .text(at.length>28?at.slice(0,27)+'…':at);
+  });
+
+  // Rows
+  SD.human_themes.forEach((ht, i) => {
+    g.append('text').attr('x',-8).attr('y',i*cellH+cellH/2+4)
+      .attr('text-anchor','end').attr('fill',HUMAN_C).attr('font-size','10px').text(ht);
+    aiThemes.forEach((at, j) => {
+      const v = (flows[ht]||{})[at]||0;
+      const isCorrect = mapping[at] === ht;
+      const norm = maxVal > 0 ? v/maxVal : 0;
+      g.append('rect').attr('x',j*cellW+1).attr('y',i*cellH+1)
+        .attr('width',cellW-2).attr('height',cellH-2).attr('rx',3)
+        .attr('fill', v===0 ? '#1a2233' : colorScale(v))
+        .attr('stroke', isCorrect&&v>0 ? '#22c55e' : 'transparent')
+        .attr('stroke-width', 2)
+        .on('mouseover',e=>showTip(
+          `<b>Human:</b> ${ht}<br><b>AI:</b> ${at}<br><b>Count:</b> ${v}${isCorrect?' ✓':' ✗'}`,e))
+        .on('mousemove',moveTip).on('mouseout',hideTip);
+      if (v>0)
+        g.append('text').attr('x',j*cellW+cellW/2).attr('y',i*cellH+cellH/2+4)
+          .attr('text-anchor','middle').attr('fill',norm>0.4?'#fff':'#94a3b8')
+          .attr('font-size','9px').attr('pointer-events','none').text(v);
+    });
+  });
+
+  // Axis labels
+  svg.append('text').attr('x',padL/2).attr('y',padT/2)
+    .attr('text-anchor','middle').attr('fill',HUMAN_C).attr('font-size','11px').attr('font-weight','600')
+    .text('Human Themes (rows)');
+  svg.append('text').attr('transform',`translate(${padL+aiThemes.length*cellW/2},18)`)
+    .attr('text-anchor','middle').attr('fill',clfColor).attr('font-size','11px').attr('font-weight','600')
+    .text(`${clf==='cgpt'?'ChatGPT':'Claude'} Themes (columns)`);
+  svg.append('text').attr('transform',`translate(${padL+aiThemes.length*cellW/2},30)`)
+    .attr('text-anchor','middle').attr('fill','#475569').attr('font-size','9px')
+    .text('Green border = semantic match (correct classification)');
+}
+
+renderCrosstab('cgpt');
+document.querySelectorAll('#ct-tabs .tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('#ct-tabs .tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    renderCrosstab(tab.dataset.clf);
+  });
+});
+</script>
+</body>
+</html>
