@@ -66,6 +66,9 @@ General comfort with AI-assisted generation, with explicit boundaries:
 | Theme prompt engineering | JP, Travis, Lauren, M | Develop and refine LLM prompts for thematic coding; compare lightly vs. highly engineered outputs against human-coded themes |
 | Sentiment prompt engineering | Bridger, Branda | Develop and refine LLM prompts for sentiment classification; compare outputs by user group (community vs. EM) |
 
+![Processes and output](assets/figures/processes.png)
+*Figure 1: Processes and output products across stages of AI evaluation*
+
 **Step-by-step plan:**
 1. Run thematic and sentiment analysis on Chetco Bar and Klondike data using LLM (lightly engineered prompts)
 2. Compare LLM outputs using the same data with highly engineered prompts
