@@ -126,6 +126,9 @@ Using the seven inductively derived human themes as a reference standard and app
 - [Human Ground Truth Accuracy and Sankey Analysis (D3 interactive)](assets/figures/human_accuracy_sankey.html) — Human themes as ground truth, LLM accuracy by theme, Sankey diagrams (Human → GPT-4.5 and Human → Claude 4.6), per-theme accuracy comparison.
 - [Community tweet-level comparison dataset](assets/files/pers_themes_comparison.csv) — 1,279 community tweets with human keyword-coded themes, GPT-4.5 assignments, and Claude 4.6 assignments.
 
+Claude Sonnet 4.6 was used to develop these charts.
+
+
 ### What's Next? 📣 { #whats-next .oasis-report-out-section .oasis-report-out-day3 }
 **Short term:**
 - Apply the validated pipeline to a new fire event (Turner Gulch, Marshall, or Lower North Fork, Colorado) to test cross-event generalizability of both the ChatGPT and Claude classification frameworks
