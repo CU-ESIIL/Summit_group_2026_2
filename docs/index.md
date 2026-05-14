@@ -95,7 +95,7 @@ Using the seven inductively derived human themes as a reference standard and app
 
 ### Visuals That Tell a Story 📣 { #visuals .oasis-report-out-section .oasis-report-out-day3 }
 
-![Human Inductive Themes × Claude Theme Assignments](assets/figures/main_result.png)
+![Human Inductive Themes × Claude Theme Assignments]
 *Figure 1: Cross-tabulation of the seven inductively derived human themes against Claude 4.6's 10 AI-generated themes (n = 2,808 tweets). Cell values indicate tweet counts under Claude's classification scheme, semantically aligned to each human theme. Strong diagonal density for Fire Progression and Evacuation indicates robust inter-method agreement; split mappings for Public Accountability indicate where AI frameworks partition human-defined constructs. Green-bordered cells mark semantic matches (correct classifications).*
 
 ![Theme Frequency Distributions: ChatGPT vs Claude](assets/figures/Model_Accuracies.png)
