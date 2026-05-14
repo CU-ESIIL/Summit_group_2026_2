@@ -121,11 +121,13 @@ Headline 3 —
 
 ![Main result](assets/figures/main_result.png)
 
-*Visual 1: ...*
+*Visuals*
 
 ![Main result](assets/figures/Model_Accuracies.png)
 ![Main result](assets/figures/Confusion_matrix.png)
 ![Main result](assets/figures/Per-sentiment_Accuracy.png)
+![Main result](assets/figures/Claude_Label_Switching.png)
+
 ### What's Next? 📣 { #whats-next .oasis-report-out-section .oasis-report-out-day3 }
 
 Short term:
