@@ -119,7 +119,7 @@ Headline 3 —
 
 ### Visuals That Tell a Story 📣 { #visuals .oasis-report-out-section .oasis-report-out-day3 }
 
-![Main result](assets/figures/main_result.png)
+![Main result](assets/figures/Group_2_flowchart)
 
 *Visuals*
 
