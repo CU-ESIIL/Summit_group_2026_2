@@ -47,6 +47,7 @@ Promising prompting directions:
 |---|---|---|
 | ChatGPT | GPT-4.5 | Thematic and sentiment classification; community and EM corpora |
 | Claude | Claude 4.6 (claude-sonnet-4-6) | Thematic and sentiment classification; community and EM corpora |
+
 ### Norms Around AI Use
 General comfort with AI-assisted generation, with explicit boundaries:
 - **Documentation:** AI outputs must be documented and traceable
@@ -64,6 +65,7 @@ General comfort with AI-assisted generation, with explicit boundaries:
 |---|---|---|
 | Theme prompt engineering | JP, Travis, Lauren, M | Develop and refine LLM prompts for thematic coding; compare lightly vs. highly engineered outputs against human-coded themes |
 | Sentiment prompt engineering | Bridger, Branda | Develop and refine LLM prompts for sentiment classification; compare outputs by user group (community vs. EM) |
+
 **Step-by-step plan:**
 1. Run thematic and sentiment analysis on Chetco Bar and Klondike data using LLM (lightly engineered prompts)
 2. Compare LLM outputs using the same data with highly engineered prompts
