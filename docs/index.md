@@ -122,7 +122,8 @@ Headline 3 —
 ![Main result](assets/figures/main_result.png)
 
 *Visual 1: ...*
-![Main result](assets/figures/Model Accuracies.png)
+
+![Main result](assets/figures/Model_Accuracies.png)
 
 ### What's Next? 📣 { #whats-next .oasis-report-out-section .oasis-report-out-day3 }
 
