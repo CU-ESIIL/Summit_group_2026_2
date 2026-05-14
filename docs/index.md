@@ -19,6 +19,7 @@ public_mode_toggle: true
 | Lauren Palermo | CU Boulder / USGS | lapa5054@colorado.edu | @palermolauren |
 | Lise St. Denis | CU Boulder / CIRES Earth Lab | lise.st.denis@colorado.edu | @lisestdenis |
 | Juan P. Maestre | University of Texas at Austin | juanpedro.maestre@utexas.edu | @drMaestre |
+| Luca A Palasti | CU Boulder | luca.palasti@colorado.edu | @lucap1211 |
 
 ### Project Goal
 
