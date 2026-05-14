@@ -3,7 +3,7 @@ title: Using AI to Assess Community Response to Climate Hazards
 public_mode_toggle: true
 ---
 # Using AI to Assess Community Response to Climate Hazards
-![test](docs/assets/figures/teampicture.png)
+![test](assets/figures/teampicture.png)
 ---
 ## Day 1
 ### People
@@ -105,9 +105,9 @@ Using the seven inductively derived human themes as a reference standard and app
 *Figure 4: Donut charts comparing the sentiment distributions assigned by GPT-4.5 (5 categories, left) and Claude 4.6 (6 categories, right) across all classified tweets. ChatGPT concentrates 64.2% of tweets in Neutral/Informational; Claude concentrates 84.9%. Claude's additional categories (Engaged/Observational, Frustrated/Critical) capture affective nuance suppressed by ChatGPT's coarser scheme, with potential relevance for public communication monitoring during active fire events.*
 
 **Interactive analysis reports:**
-- [Three-Way Thematic Comparison (D3 interactive)](thematic_comparison.html) — Cross-tabulation heatmap, Sankey flow, convergence network, sentiment profiles, and category distributions across GPT-4.5, Claude 4.6, and human source groups.
-- [Human Ground Truth Accuracy and Sankey Analysis (D3 interactive)](human_accuracy_sankey.html) — Human themes as ground truth, LLM accuracy by theme, Sankey diagrams (Human → GPT-4.5 and Human → Claude 4.6), per-theme accuracy comparison.
-- [Community tweet-level comparison dataset](Thematic_analysis_Human/pers_themes_comparison.csv) — 1,279 community tweets with human keyword-coded themes, GPT-4.5 assignments, and Claude 4.6 assignments.
+- [Three-Way Thematic Comparison (D3 interactive)](assets/figures/thematic_comparison.html) — Cross-tabulation heatmap, Sankey flow, convergence network, sentiment profiles, and category distributions across GPT-4.5, Claude 4.6, and human source groups.
+- [Human Ground Truth Accuracy and Sankey Analysis (D3 interactive)](assets/figures/human_accuracy_sankey.html) — Human themes as ground truth, LLM accuracy by theme, Sankey diagrams (Human → GPT-4.5 and Human → Claude 4.6), per-theme accuracy comparison.
+- [Community tweet-level comparison dataset](assets/files/pers_themes_comparison.csv) — 1,279 community tweets with human keyword-coded themes, GPT-4.5 assignments, and Claude 4.6 assignments.
 
 ### What's Next? 📣 { #whats-next .oasis-report-out-section .oasis-report-out-day3 }
 **Short term:**
