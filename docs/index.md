@@ -110,6 +110,15 @@ Using the seven inductively derived human themes as a reference standard and app
 ![Sentiment Profile Comparison: ChatGPT vs Claude](assets/figures/Per-sentiment_Accuracy.png)
 *Figure 4: Donut charts comparing the sentiment distributions assigned by GPT-4.5 (5 categories, left) and Claude 4.6 (6 categories, right) across all classified tweets. ChatGPT concentrates 64.2% of tweets in Neutral/Informational; Claude concentrates 84.9%. Claude's additional categories (Engaged/Observational, Frustrated/Critical) capture affective nuance suppressed by ChatGPT's coarser scheme, with potential relevance for public communication monitoring during active fire events.*
 
+![Per-Theme Accuracy: GPT-4.5 vs Claude 4.6](assets/figures/per_theme_accuracy.png)
+*Figure 5: Per-theme accuracy for GPT-4.5 (left, n = 880) and Claude 4.6 (right, n = 1,279) against the seven inductively derived human themes used as ground truth. Both models perform well on Evacuation and Smoke/Air Quality; GPT-4.5 scores zero on Geospatial Mapping and Operational Coordination, categories absent from its thematic framework. Claude's domain-anchored prompt engineering yields substantially higher overall accuracy (54.0% vs. 29.5%) and covers all seven human theme categories.*
+
+![Sankey Diagram: Human Themes → GPT-4.5 Theme Assignments](assets/figures/sankey_human_cgpt.png)
+*Figure 6: Sankey flow diagram showing how the 880 matched community tweets assigned a human inductive theme (left) were reclassified by GPT-4.5 (right). Green flows indicate semantic matches (correct classifications); coloured flows indicate thematic splitting or misclassification. The near-complete absorption of Fire Progression tweets into "Seeking visibility and official action" accounts for GPT-4.5's low accuracy on the most frequent human theme.*
+
+![Sankey Diagram: Human Themes → Claude 4.6 Theme Assignments](assets/figures/sankey_human_claude.png)
+*Figure 7: Sankey flow diagram showing how the 1,279 community tweets assigned a human inductive theme (left) were reclassified by Claude 4.6 (right). Green flows indicate semantic matches. Evacuation, Smoke/Air Quality, Operational Coordination, and Geospatial Mapping show tight, near-exclusive flows to their corresponding Claude themes. Fire Progression distributes across three Claude themes, reflecting Claude's finer parsing of high-volume status-update content.*
+
 **Interactive analysis reports:**
 - [Three-Way Thematic Comparison (D3 interactive)](assets/figures/thematic_comparison.html) — Cross-tabulation heatmap, Sankey flow, convergence network, sentiment profiles, and category distributions across GPT-4.5, Claude 4.6, and human source groups.
 - [Human Ground Truth Accuracy and Sankey Analysis (D3 interactive)](assets/figures/human_accuracy_sankey.html) — Human themes as ground truth, LLM accuracy by theme, Sankey diagrams (Human → GPT-4.5 and Human → Claude 4.6), per-theme accuracy comparison.
