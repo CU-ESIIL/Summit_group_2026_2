@@ -3,7 +3,7 @@ title: Using AI to Assess Community Response to Climate Hazards
 public_mode_toggle: true
 ---
 # Using AI to Assess Community Response to Climate Hazards
-![climate hazards figure](docs/assets/images/logos/climate_hazards.png)
+![climate hazards figure](docs/assets/figures/teampicture.png)
 ---
 ## Day 1
 ### People
