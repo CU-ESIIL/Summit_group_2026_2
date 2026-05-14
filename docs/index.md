@@ -83,6 +83,37 @@ General comfort with AI-assisted generation, with explicit boundaries:
 - Seven themes identified: Fire Progression, Evacuation, Smoke/Air Quality, Operational Coordination, Community Solidarity, Geospatial Mapping, and Public Accountability
 - Initial comparison of AI-assigned themes against human-coded emerging themes underway (community data only, n = 388 hand-coded tweets)
 - R script for human vs. AI theme cross-tabulation drafted and available for review
+
+  We used the following prompt:
+  <div style="border:1px solid #e0e0e0;border-radius:10px;overflow:hidden;margin:1.5rem 0;font-family:system-ui,sans-serif">
+  <div style="background:#f5f5f5;border-bottom:1px solid #e0e0e0;padding:10px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <strong style="font-size:13px;color:#1a1a1a">Claude thematic analysis prompt</strong>
+    <span style="background:#534AB7;color:#EEEDFE;font-size:11px;font-weight:500;padding:3px 9px;border-radius:20px">System prompt</span>
+    <span style="font-size:12px;color:#888;margin-left:auto">Thematic_analysis/CLAUDE.md</span>
+  </div>
+  <div style="padding:16px 20px;display:flex;flex-direction:column;gap:14px">
+    <div style="border-left:3px solid #AFA9EC;padding-left:12px">
+      <div style="font-size:11px;font-weight:600;color:#534AB7;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">Role</div>
+      <p style="font-size:13px;color:#555;line-height:1.6;margin:0">Mixed methodologist with 20 years of experience in crisis informatics specialized in social media and emergency response. Conducting a research study on stakeholder communications during wildfire events using big data approaches.</p>
+    </div>
+    <div style="border-left:3px solid #AFA9EC;padding-left:12px">
+      <div style="font-size:11px;font-weight:600;color:#534AB7;text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Study groups</div>
+      <div style="font-size:13px;color:#555;line-height:1.7"><strong style="color:#1a1a1a">1. Community members</strong> — general public tweets from Chetco Bar and Klondike fires<br><strong style="color:#1a1a1a">2. Emergency response personnel</strong> — curated EM-annotated tweet corpus</div>
+    </div>
+    <div style="border-left:3px solid #AFA9EC;padding-left:12px">
+      <div style="font-size:11px;font-weight:600;color:#534AB7;text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Analysis tasks</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="display:flex;gap:8px;font-size:13px;color:#555;line-height:1.5"><span style="background:#f0f0f0;border:1px solid #ddd;border-radius:4px;font-size:11px;font-weight:600;color:#333;min-width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">0</span><span>Develop a codebook for sentiment and topical categories from the tweet corpus</span></div>
+        <div style="display:flex;gap:8px;font-size:13px;color:#555;line-height:1.5"><span style="background:#f0f0f0;border:1px solid #ddd;border-radius:4px;font-size:11px;font-weight:600;color:#333;min-width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">1</span><span>Characterize individual tweets by communicator type, sentiment, and topical category</span></div>
+        <div style="display:flex;gap:8px;font-size:13px;color:#555;line-height:1.5"><span style="background:#f0f0f0;border:1px solid #ddd;border-radius:4px;font-size:11px;font-weight:600;color:#333;min-width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">2</span><span>Inductive thematic analysis — max 7 words per theme, same granularity level, each tweet treated as having an implicit intent for an implicit audience</span></div>
+        <div style="display:flex;gap:8px;font-size:13px;color:#555;line-height:1.5"><span style="background:#f0f0f0;border:1px solid #ddd;border-radius:4px;font-size:11px;font-weight:600;color:#333;min-width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">3</span><span>Outputs: per-theme summaries (8 lines, 3 verbatim tweets), group narratives, CSV export, frequency tables, and codebook tables</span></div>
+      </div>
+    </div>
+  </div>
+  <div style="border-top:1px solid #e0e0e0;padding:10px 20px;background:#f5f5f5;font-size:12px;color:#888">
+    Model: Claude 4.6 (claude-sonnet-4-6) &nbsp;·&nbsp; n = 2,808 tweets &nbsp;·&nbsp; Chetco Bar and Klondike fires, Oregon
+  </div>
+</div>
 ---
 ## Day 3
 ### Findings at a Glance 📣 { #findings .oasis-report-out-section .oasis-report-out-day3 }
